@@ -209,7 +209,7 @@ ID sets. The Markdown consensus document remains the human explanation.
    | k_bivariate | ... | ... | |T| |
    | k_narrative-only | ... | ... (explicit IDs listed) | (A ∪ C) \ B \ T |
 
-**Precedent incident (CBCT Biopsy MA-1, 2026-04-20):** v11 manuscript shipped with k_qualitative = 32 / k_narrative-only = 10 / k_FT-excluded = 46. ID-set reconciliation (only performed after Codex adversarial audit at post-Stage 4 QC) revealed true counts 24/2/54. The prose "30 → 32 after FLAG consensus" had been carried from v7 without ever being reconciled against `fulltext_screening_final.tsv` ∩ `MA1_Consensus_Sheet.xlsx`; four downstream artifacts echoed the same wrong total. This gate would have caught the drift at Phase 5 hand-off.
+**Precedent incident (a PRISMA-DTA meta-analysis, 2026-04-20):** v11 manuscript shipped with k_qualitative = 32 / k_narrative-only = 10 / k_FT-excluded = 46. ID-set reconciliation (only performed after Codex adversarial audit at post-Stage 4 QC) revealed true counts 24/2/54. The prose "30 → 32 after FLAG consensus" had been carried from v7 without ever being reconciled against `fulltext_screening_final.tsv` ∩ `MA1_Consensus_Sheet.xlsx`; four downstream artifacts echoed the same wrong total. This gate would have caught the drift at Phase 5 hand-off.
 
 ### Phase 4: Data Extraction
 
@@ -226,7 +226,7 @@ Before opening the extraction form: if a senior mentor or collaborator has share
 - Record any reconciled discrepancy in `extraction_consensus_log.md` with a verbatim quote of the AI-draft value and the corrected value with PDF page coordinate.
 - Trust hierarchy for this phase: **SSOT (source PDF + own analysis stdout) > mentor's direct text (email / track-changes) > attached AI-draft**. Do not promote an AI-draft from tier 3 to tier 2.
 
-Precedent (RFA-Adjunct, 2026-04-12): Ishikawa 2017 "treatment support 5/70 vs no support 12/33" in Claude-drafted directive → source PDF was 35/68 (single arm). Verbatim absorption would have produced a denominator-hallucinated meta-analysis.
+Precedent (an active meta-analysis project): Ishikawa 2017 "treatment support 5/70 vs no support 12/33" in Claude-drafted directive → source PDF was 35/68 (single arm). Verbatim absorption would have produced a denominator-hallucinated meta-analysis.
 
 #### DTA Meta-Analysis:
 Generate a data extraction form with:

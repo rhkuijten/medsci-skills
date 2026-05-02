@@ -20,7 +20,7 @@ wrote it, while preserving every technical claim, number, and citation.
 
 ## Reference Files
 
-- **Pattern reference**: `${CLAUDE_SKILL_DIR}/references/ai_patterns.md` -- full 21-pattern list with expanded examples for medical/radiology manuscripts (Pattern 19–21 added 2026-05-01 from RFA-Adjunct senior MA reviewer feedback)
+- **Pattern reference**: `${CLAUDE_SKILL_DIR}/references/ai_patterns.md` -- full 21-pattern list with expanded examples for medical/radiology manuscripts (Pattern 19–21 added 2026-05-01 from senior MA reviewer feedback)
 - **Source material**: Based on matsuikentaro1/humanizer_academic and Wikipedia: Signs of AI writing
 
 Always read the pattern reference file at the start of a humanize session.
@@ -170,7 +170,7 @@ If the density remains above 2.0, run another fix-verify cycle (max 3 rounds).
 | 17 | Excessive hedging | "may potentially suggest the possibility" | Choose the appropriate certainty level: "suggests" |
 | 18 | Generic positive conclusions | "The future looks bright," "continues to reshape," "paves the way" | State the specific next step or implication |
 
-### Senior MA Reviewer Patterns (2026-05-01, RFA-Adjunct KKW circulation)
+### Senior MA Reviewer Patterns
 
 | # | Pattern | What to look for | Fix |
 |---|---------|------------------|-----|

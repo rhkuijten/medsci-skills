@@ -128,7 +128,7 @@ For any manuscript project (cohort, MA, RCT, case series), enforce this structur
 - Mid-project cleanup: when `manuscript/` has >3 versioned files or QC docs at top level, reorganize.
 - Before session handoff: reorganize if structure is drifting.
 
-**Precedent:** CK-5 Emphysema → Mortality (2026-04-20) reorganized v1–v6 + QC docs from manuscript/ top level so reject-retarget path to KJR requires only `cp -r submission/chest submission/kjr`.
+**Precedent:** an STROBE cohort with mortality endpoint (2026-04-20) reorganized v1–v6 + QC docs from manuscript/ top level so reject-retarget path to KJR requires only `cp -r submission/chest submission/kjr`.
 
 ---
 

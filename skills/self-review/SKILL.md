@@ -268,7 +268,7 @@ separate failure mode: a prior-draft prose total ("30 → 32 after FLAG consensu
 every downstream pass because Abstract, Methods, Results, Discussion, Figure 1 caption, and
 even the supplementary consensus file all cite the same wrong number back to each other.
 
-**Precedent failure pattern (CBCT Biopsy MA-1, 2026-04-20):**
+**Precedent failure pattern (a PRISMA-DTA meta-analysis, 2026-04-20):**
 > v11 manuscript reported k_qualitative = 32, k_narrative-only = 10, k_FT-excluded = 46.
 > Screening TSV (28 INCLUDE) ∩ consensus sheet (non-Exclude) + 2 FLAG additions yields
 > k_qualitative = 24 with only 2 narrative-only studies (k_FT-excluded = 54). The 32/10/46
@@ -377,7 +377,7 @@ build script carries its own legacy SSOT. Internal consistency (Phase 2.5)
 cannot detect it — both the prose and the build artifact echo their own
 divergent truths cleanly.
 
-**Precedent failure pattern (CK-1 CAC Warranty v6.2, 2026-04-28):**
+**Precedent failure pattern (an STROBE cohort manuscript (internal precedent), 2026-04-28):**
 > Body prose cited Supp Table S4 as the CAC>10 sensitivity analysis; the
 > rendered DOCX S4 was VIF Diagnostics. S1, S6, S7 also mismatched. S8 and S9
 > were cited in the manuscript but absent from the rendered DOCX entirely.

@@ -38,7 +38,7 @@ with one decision tree, one set of CSL files, and one provenance file
 (`NOTICE.md`) for the vendored Zotero CWYW writer.
 
 Validated 2026-05-01 against a 21-reference meta-analysis manuscript
-(RFA-Adjunct ER submission) for both pandoc-citeproc and Zotero-CWYW paths.
+(a meta-analysis project's submission) for both pandoc-citeproc and Zotero-CWYW paths.
 
 ## Anti-Hallucination Guarantees
 
@@ -129,7 +129,7 @@ a `[N] → ZoteroKey` mapping.
      --map ref_map.json --to-keys
    ```
    Optionally stage with `--active-ns 1,2,3,4,19` for a sample build first
-   (validated on RFA-Adjunct: 5-ref sample reduces Word Refresh blast radius
+   (validated on an active meta-analysis project: 5-ref sample reduces Word Refresh blast radius
    when debugging).
 2. **Render to .docx** with pandoc (workflow A) so the body has plain text
    `[@key]` markers, OR pre-build a .docx some other way that still contains
@@ -215,7 +215,7 @@ This skill defines **three submission gates** and **one user approval gate**:
    stub `ADDIN ZOTERO_BIBL` field; Word's Zotero Refresh treats an empty
    stub as user-customized and refuses to populate it. User must run
    Add/Edit Bibliography once. Subsequent Refresh works as expected.
-   Validated on Word for Mac, RFA-Adjunct (2026-05-01).
+   Validated on Word for Mac, an active meta-analysis project.
 2. **Webpage / non-journal item types**: handled by the patched
    `zotero_to_csl_json` that fetches Zotero's native CSL-JSON; do not bypass
    this patch.

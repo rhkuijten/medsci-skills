@@ -29,3 +29,18 @@ dist/
 # Personal session handoff notes (root-level only; skills/*/HANDOFF.md are skill docs)
 /HANDOFF.md
 /HANDOFF_*.md
+
+# Personal planning / improvement queue notes (root-level only)
+/IMPROVEMENT_QUEUE.md
+/FOLLOWUPS.md
+/PLAN_*.md
+/PLANNED_*.md
+
+# Per-session planning notes inside docs/plans (skill-design scratchpads)
+/docs/plans/
+
+# Per-skill development handoff scratchpads (NOT user-facing skill docs)
+skills/*/HANDOFF.md
+skills/*/HANDOFF_*.md
+skills/**/HANDOFF.md
+skills/**/HANDOFF_*.md

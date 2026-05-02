@@ -19,7 +19,7 @@ Markdown + frontmatter → publication-quality Korean academic PDF.
 
 ## Why This Skill Exists
 
-2026-05-01 MeducAI Paper 2 calibration anchor PDF 회람에서 두 번 재작업:
+2026-05-01 an education-research calibration anchor PDF 회람에서 두 번 재작업:
 1. v1: 변경이력·버전번호·PI attribution이 첨부 PDF 노출 → 첫 수신자 혼란
 2. v2: pandoc pipe table 대시 비율 잘못 잡혀 첫 열 협소 → 라벨 wrap, 가독성 저하
 
@@ -66,7 +66,7 @@ bash scripts/check_deps.sh
 ```yaml
 ---
 title: "Paper 2 Calibration Anchor — Q&A Grid"
-author: "MeducAI Working Group"
+author: "<Author Group>"
 date: "2026-05-01"
 mainfont: "Apple SD Gothic Neo"        # macOS default
 CJKmainfont: "Apple SD Gothic Neo"

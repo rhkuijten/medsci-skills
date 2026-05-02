@@ -185,9 +185,10 @@ PRISMA-P. Triggers when Item 16a (flow diagram) is PRESENT.
 
 **Why this step exists:** the flow diagram is a single checklist item and can pass Step 4
 visually while still containing arithmetic errors (records screened ≠ identified − duplicates;
-sought-for-retrieval ≠ screened − excluded) or text↔figure number disagreements. KKW
-v3 회람 (2026-04-26) 코멘트 K-4/K-C6: "PRISMA 2020 표준 다이아그램 + flow와 number 확인 필수".
-Reviewer가 발견하면 즉시 신뢰도 손실.
+sought-for-retrieval ≠ screened − excluded) or text↔figure number disagreements. Senior
+MA reviewers commonly require strict PRISMA 2020 diagram conformance and explicit body↔
+figure number agreement; reviewers who detect these mismatches lose confidence in the
+study's data integrity immediately.
 
 **Four arithmetic checks:**
 1. records screened = records identified − duplicates removed

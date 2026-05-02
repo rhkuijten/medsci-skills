@@ -360,7 +360,7 @@ guard reinforces that boundary.
 | fill-protocol | content markdown + institutional Word template (.doc/.docx) | filled `*.docx` preserving original styles, table layouts, fonts, geometry |
 | fill-icmje-coi | author roster (JSON), seed `coi_disclosure.docx` (synthetic shipped) | per-author `coi_disclosure_{author}.docx` (Date, Name, Manuscript Title replaced) |
 | sync-submission | manuscript/, qc/ artifacts, journal profile | submission/{journal}/manifest.md, drift report |
-| peer-review | external manuscript (.docx/.pdf), journal scope | review draft (review.md) following Yoojin Peer-Review Guideline v2.5 |
+| peer-review | external manuscript (.docx/.pdf), journal scope | review draft (review.md) following the medical imaging peer-review guideline |
 
 ### Rules
 1. After each skill completes, run post-skill validation before proceeding.

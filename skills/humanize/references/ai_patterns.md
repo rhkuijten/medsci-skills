@@ -360,11 +360,11 @@ AI ends papers with content-free optimistic statements.
 
 ---
 
-## Senior MA Reviewer Patterns (added 2026-05-01 from RFA-Adjunct KKW circulation)
+## Senior MA Reviewer Patterns
 
 ### Pattern 19: § (Section-Sign) Marker
 
-AI 모델이 본문에서 섹션을 가리킬 때 `§` 기호를 자주 사용. Senior MA reviewer (특히 김경원 교수)가 즉시 "AI 패턴"으로 인지. 한국·미국 의학지 manuscript에서는 거의 사용되지 않는 LaTeX 풍 표기.
+AI 모델이 본문에서 섹션을 가리킬 때 `§` 기호를 자주 사용. Senior MA reviewer가 즉시 "AI 패턴"으로 인지. 한국·미국 의학지 manuscript에서는 거의 사용되지 않는 LaTeX 풍 표기.
 
 | # | BAD | GOOD |
 |---|-----|------|

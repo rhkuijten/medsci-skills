@@ -28,7 +28,7 @@ End-to-end integration sweep after the parallel-session conflict around the mana
 
 - **Fixed (P0 blocker)** — `skills/write-paper/SKILL.md` Phase 7.6 hardcoded `${CLAUDE_SKILL_DIR}/scripts/check_citation_keys.py` / `render_manuscript.sh` / `check_xref.py`, all of which moved to `/manage-refs` in the previous release. The hardcoded paths produced a runtime "file not found" the moment the autonomous pipeline tried to render a DOCX. Replaced all three with `${MEDSCI_SKILLS_ROOT:-$HOME/workspace/medsci-skills}/skills/manage-refs/scripts/...` and added a one-line delegation note pointing users at `/manage-refs` directly. The Phase summary table at line 861 was updated to label step 7.6 / 7.6a as `/manage-refs` calls.
 
-- **Added** — `skills/render-pdf-doc/` (147-line SKILL.md + scripts/{render_pdf.sh, infer_colwidths.py, check_deps.sh} + 4 templates + 2 references). Skill renders non-bibliography academic markdown (proposal, briefing, anchor doc, IRB cover, reference table) to PDF via pandoc + xelatex with CJK font fallback (Apple SD Gothic Neo / Noto Sans CJK KR) and content-proportional pipe-table column widths. Boundary opposite of `/manage-refs scripts/render_pandoc.sh` (bibliography-driven). Origin: MeducAI Paper 2 calibration anchor — manual fix x2 → skill.
+- **Added** — `skills/render-pdf-doc/` (147-line SKILL.md + scripts/{render_pdf.sh, infer_colwidths.py, check_deps.sh} + 4 templates + 2 references). Skill renders non-bibliography academic markdown (proposal, briefing, anchor doc, IRB cover, reference table) to PDF via pandoc + xelatex with CJK font fallback (Apple SD Gothic Neo / Noto Sans CJK KR) and content-proportional pipe-table column widths. Boundary opposite of `/manage-refs scripts/render_pandoc.sh` (bibliography-driven). Origin: a calibration-anchor PDF that needed manual column-width fixes twice in succession.
 
 - **Added** — `skills/render-pdf-doc/skill.yml` v1 contract (inputs / outputs / forbidden_actions / quality_gates). `bibliography_rendering`, `institutional_word_form_filling`, `figure_or_pptx_generation` are explicitly forbidden so the skill cannot drift into adjacent domains.
 
@@ -49,18 +49,18 @@ End-to-end integration sweep after the parallel-session conflict around the mana
 
 - **Added** — `docs/rule-application-map.md` — single-page matrix mapping every global rule (`~/.claude/rules/`) to the skill / phase that triggers it, with severity. Index only; rule bodies remain in the user's `.claude/rules/` directory.
 
-- **Moved** — `_plans/render_pdf_doc.md` → `docs/plans/render_pdf_doc.md` (was project-root untracked; now versioned for spinoff trace).
+- **Moved** — internal planning note for the `render-pdf-doc` skill from project-root scratchpad into the per-session planning area (now gitignored).
 
 ### Added — `/manage-refs` skill split (2026-05-01)
 
-The reference-handling lifecycle (citekey validation, journal-CSL pandoc rendering, manuscript ↔ DOCX cross-reference QC, marker conversion, native Zotero CWYW field-code injection) was extracted from `/write-paper` Phase 7.6 into a new cross-cutting `/manage-refs` skill so it can be invoked uniformly from `/revise`, `/peer-review`, `/sync-submission`, and `/find-journal` (cascade rejection re-render). Validated 2026-05-01 against the RFA-Adjunct ER submission (21-reference manuscript, both pandoc-citeproc and Zotero-CWYW paths).
+The reference-handling lifecycle (citekey validation, journal-CSL pandoc rendering, manuscript ↔ DOCX cross-reference QC, marker conversion, native Zotero CWYW field-code injection) was extracted from `/write-paper` Phase 7.6 into a new cross-cutting `/manage-refs` skill so it can be invoked uniformly from `/revise`, `/peer-review`, `/sync-submission`, and `/find-journal` (cascade rejection re-render). Validated against a 21-reference systematic-review manuscript, both pandoc-citeproc and Zotero-CWYW paths.
 
 - **New skill** `skills/manage-refs/`:
   - `SKILL.md` (216 lines, MID tier) — decision tree, Workflows A–D (pandoc citeproc / Zotero CWYW / cascade rejection / cross-reference QC), Anti-Hallucination Guarantees (6 items), Quality Gates (3 submission gates + 1 user approval gate).
   - `skill.yml` — v1 contract with full `inputs / outputs / deterministic_scripts / side_effects / downstream_consumers / forbidden_actions` declaration plus provenance entry for the vendored Zotero CWYW writer.
   - `citation_styles/` — 9 journal CSL files relocated from `write-paper/references/citation_styles/` (european-radiology, radiology, AJR, CVIR, KJR, vancouver, vancouver-superscript, springer-basic-brackets, springer-vancouver-brackets).
   - `scripts/check_citation_keys.py`, `scripts/check_xref.py`, `scripts/render_pandoc.sh` — relocated from `write-paper/scripts/` (`render_manuscript.sh` renamed to `render_pandoc.sh`).
-  - `scripts/md_marker_convert.py` (new) — generalized `[N]` ↔ `[@key]` converter, mapping-driven, supports `.md` and `.docx`, partial-conversion safe with `--active-ns`. Extracted and generalized from RFA-Adjunct `build_v4_zotero_docx.py` replacer logic.
+  - `scripts/md_marker_convert.py` (new) — generalized `[N]` ↔ `[@key]` converter, mapping-driven, supports `.md` and `.docx`, partial-conversion safe with `--active-ns`. Extracted and generalized from a per-project temporary `build_zotero_docx.py` replacer.
   - `scripts/inject_zotero_cwyw.py` (new) — wraps the vendored `citation_writer.insert_citations` and patches `zotero_to_csl_json` to fetch native CSL-JSON via Zotero's connector API (handles webpage / report / non-journal item types correctly, where the upstream `_ITEM_TYPE_MAP` falls back to `"article"` and silently drops fields).
   - `scripts/_vendor_citation_writer.py` (vendored) — from `alisoroushmd/zotero-mcp` @ `ed5dfb71`, MIT license. See `NOTICE.md` and `LICENSE.zotero-mcp`.
   - `references/check_xref_symptoms.md` — `MISSING_DOCX` / `MISSING_BODY` / `MISMATCH` / `UNCITED` triage table.
@@ -74,13 +74,13 @@ The reference-handling lifecycle (citekey validation, journal-CSL pandoc renderi
   - `~/.claude/rules/agent-skill-routing.md` — added `/manage-refs` rows for lifecycle, CSL render, citekey check, cross-reference QC, and CWYW injection; `/verify-refs` clarified as audit-only.
   - `~/.claude/rules/manuscript-references.md` — pandoc pipeline section repointed at `manage-refs/scripts/render_pandoc.sh`, with `check_xref.py` step added inline.
 
-### Added — Senior MA reviewer harvest from RFA-Adjunct (KKW v3 circulation, 2026-04-26)
+### Added — Senior MA reviewer harvest
 
-Lessons from senior meta-analysis mentor (Asan/UoU) circulation feedback promoted into global rules and skill checklists, so the next manuscript circulation in the pipeline (02_CBCT_Biopsy, 03_CBCT_Ablation) does not repeat the same comments.
+Lessons from senior meta-analysis mentor circulation feedback promoted into global rules and skill checklists, so subsequent manuscript circulations in the same pipeline do not repeat the same comments.
 
 - **Global rules (5 files)** under `~/.claude/rules/`:
   - `manuscript-style-classical.md` (new) — 11-item style policy: `## **METHODS**` heading, abstract sub-headers `**Objectives:**`, eligibility numbered list, no `§` symbol, no AI Disclosure paragraph in body, em-dash <25, Vancouver 6+ et al., ORCID one-per-line, table header punctuation, British/American per journal.
-  - `senior-mentor-circulation.md` (new) — mandatory `8_Review_Comments/` folder layout, 1차 source preservation, 1:1 verification, mentor README (KKW/LHC examples accumulated).
+  - `senior-mentor-circulation.md` (new) — mandatory `8_Review_Comments/` folder layout, 1차 source preservation, 1:1 verification, mentor README (per-mentor preference accumulation).
   - `ai-drafted-document-policy.md` (new) — verbatim absorption forbidden when senior mentors attach AI-drafted documents; `_DO_NOT_USE_VERBATIM` filename suffix mandatory; trust hierarchy SSOT > mentor direct text > AI-draft. Motivation: 2026-04-12 Ishikawa 2017 denominator hallucination (5/70 vs 12/33 → real 35/68).
   - `data-integrity.md` — one-line augmentation cross-linking the AI-drafted policy.
   - `agent-skill-routing.md` — new "Cross-cutting 룰 (Manuscript / 회람)" table referencing the six rule files.
@@ -102,23 +102,23 @@ Lessons from senior meta-analysis mentor (Asan/UoU) circulation feedback promote
   - `skills/check-reporting/SKILL.md` Step 4d — invocation block + flagging policy (`[PRISMA-FIGURE]`, `fixable_by_ai: false`).
   - `skills/check-reporting/references/step4d_prisma_figure_audit.md` (new) — regex set, JSON schema, edge cases (multi-database, citation-searching strand, dual-reviewer screening, reports-vs-records terminology).
 
-Resolves RFA-Adjunct → medsci-skills handoff P1+P2 (2026-05-01 letter).
+Resolves the meta-analysis project → medsci-skills handoff P1+P2.
 
 ### Added — Manuscript ↔ rendered DOCX cross-reference QC (`/write-paper` Step 7.6a + `/self-review` Phase 2.5d)
 
 New 3-way audit catches the failure mode where in-text Table/Figure citations resolve to a different rendered caption because the build script carries its own legacy SSOT. Internal consistency (Phase 2.5) cannot detect it — both the prose and the build artifact echo their own divergent truths cleanly.
 
-**Precedent (CK-1 CAC Warranty v6.2, 2026-04-28):** body cited "Supp Table S4 (CAC>10 sensitivity)" but rendered DOCX S4 was "VIF Diagnostics"; S1, S6, S7 mismatched and S8, S9 cited but absent from DOCX entirely. Caught only on co-author circulation review.
+**Precedent:** in a STROBE cohort manuscript, the body cited "Supp Table S4 (sensitivity analysis)" but the rendered DOCX S4 was a different table; S1, S6, S7 mismatched and S8, S9 were cited but absent from the DOCX entirely. Caught only on co-author circulation review.
 
 - `skills/write-paper/scripts/check_xref.py` — extracts (a) `(Supplementary )?(Table|Figure)\s+(S?\d+[A-Z]?)` in-text citations, (b) caption definitions from `## Tables` / `## Figures` / `## Supplementary {Tables,Figures}` body sections, (c) rendered DOCX caption paragraphs via python-docx. Emits `qc/xref_audit.json` with status codes `OK | MISSING_DOCX | MISSING_BODY | MISMATCH | UNCITED | NOT_CITED_NO_BODY`. Caption agreement via Jaccard ≥0.40. Panel-letter fallback (`Figure 2A` cite resolves to `Figure 2` caption). `--strict` exits 1 on any P0 finding.
 - `/write-paper` Step 7.6a (new) — runs after Step 7.6 DOCX build, before Step 7.7 final gate. Submission gate; HALT pipeline on non-OK. Routing table for fixes by symptom (body update vs build-script update) — body caption is the SSOT, never the reverse.
 - `/self-review` Phase 2.5d (new) — reuses the same script when a rendered DOCX exists. Translates findings to P0 Major Comments (category F, `fixable_by_ai: false`). Auto-fix forbidden in `--fix` mode (caption rewrites without rebuilding DOCX would only move the mismatch).
 
-Resolves IMPROVEMENT_QUEUE #1 (HIGH).
+Resolves an internal improvement queue item (cross-reference QC, HIGH priority).
 
 ### Added — `/make-figures` flow diagram pipeline (R + DiagrammeR + rsvg)
 
-New standardized flow-diagram generation for STROBE / CONSORT / PRISMA / STARD in a single R script, replacing the former D2 + matplotlib mix that caused repeated overlap, font, and DOCX-embed issues (root cause of the CK-5 Figure 1 rework, 2026-04-20).
+New standardized flow-diagram generation for STROBE / CONSORT / PRISMA / STARD in a single R script, replacing the former D2 + matplotlib mix that caused repeated overlap, font, and DOCX-embed issues.
 
 - `skills/make-figures/scripts/generate_flow_diagram.R` — CLI dispatcher: `--type {strobe|consort|prisma|stard} --config <yaml> --out <prefix>`. Reads a YAML node/edge spec, emits true vector PDF + 300 dpi PNG + 600 dpi PNG. Monochrome black outline on white fill, Arial, auto-overlap via Graphviz `dot` engine.
 - `skills/make-figures/references/exemplar_diagrams/{strobe,consort,prisma,stard}/` — each directory now contains `template_input.yaml` + rendered `template_output.{pdf,png,_600.png}` so users can fork a concrete example.
@@ -129,14 +129,14 @@ New standardized flow-diagram generation for STROBE / CONSORT / PRISMA / STARD i
 
 **System dependency:** `brew install librsvg` (macOS) or `apt-get install librsvg2-bin` (Linux). R packages: `DiagrammeR`, `DiagrammeRsvg`, `rsvg`, `yaml`.
 
-**Validated end-to-end:** CK-5 Emphysema-COPD-Mortality Figure 1 (STROBE cohort) rebuilt with the new pipeline — single-color outline, no overlap, Arial rendered correctly for en-dash / bullet / `≤` / minus sign. Counts derived from `emphysema_analysis_cohort.csv` (N = 41,291; Emph+ 3,774 / Emph− 37,517; deaths 57 + 227). Legacy `create_figure1.py` and `figure1_flow.d2` preserved with `_legacy` suffix.
+**Validated end-to-end:** a STROBE cohort Figure 1 rebuilt with the new pipeline — single-color outline, no overlap, Arial rendered correctly for en-dash / bullet / `≤` / minus sign. Counts derived from a tracked cohort CSV. Legacy `create_figure1.py` and `figure1_flow.d2` preserved with `_legacy` suffix.
 
-**Rollout (2026-04-20 ~ 21, 9/10 projects retrofitted):** STROBE — CK-5 Emphysema, CAC_Warranty. STARD — CXRscoliosis, SkullFx Paper2, MeducAI Paper1 (v2_monochrome parallel). PRISMA — MA-01 RFA_Adjunct, MA-21 Aneurysm_FD. PRISMA-DTA — MA-02 CBCT_Biopsy. CONSORT-edu — MeducAI Paper3 (v2_monochrome parallel). Blocked: MA-03 CBCT_Ablation — P0 HALT on 3-way numeric conflict (screening log / Methods / Results) requiring prose reconciliation before retrofit; handoff at `10_Meta_Analysis/03_CBCT_Ablation/HANDOFF_prisma_flow_reconciliation.md`.
+**Rollout:** retrofitted across multiple manuscripts spanning STROBE, STARD, PRISMA, PRISMA-DTA, and CONSORT-edu reporting guidelines.
 
-- SKILL.md Flow-diagram section now documents the **per-project `create_figure1.R` pattern** (sprintf'd `dot` string + `stopifnot()` count reconciliation + multi-rank `{rank=same}` blocks) as the preferred route when the generic YAML dispatcher cannot express complex layouts. Nine exemplar `create_figure1.R` paths listed inline as copy-paste references.
-- SKILL.md style rules hardened: **no HTML-like labels** (`label=<...>` with `<B>`/`<I>`/`&#8226;`) — rejected 2026-04-20 in MA-01 RFA after bullets/bold emphasis attempt broke structure ("오히려 구조가 깨저버렸어. 그냥 이전버전으로 하자").
+- SKILL.md Flow-diagram section now documents the **per-project `create_figure1.R` pattern** (sprintf'd `dot` string + `stopifnot()` count reconciliation + multi-rank `{rank=same}` blocks) as the preferred route when the generic YAML dispatcher cannot express complex layouts.
+- SKILL.md style rules hardened: **no HTML-like labels** (`label=<...>` with `<B>`/`<I>`/`&#8226;`) — plain quoted labels with `\l` bullets produce tighter, more readable structure than HTML ragged wrapping.
 
-### Added — New skill `/academic-aio` + pipeline integration across README, write-paper, orchestrate, PLAN_E2E_PIPELINE
+### Added — New skill `/academic-aio` + pipeline integration across README, write-paper, orchestrate
 
 Medical AI paper optimization for AI search engines (Perplexity, ChatGPT web, Elicit,
 Consensus, SciSpace) and RAG-based literature tools. Integrates TRIPOD+AI, CLAIM,
@@ -162,12 +162,12 @@ edits silently (Communication Rules).
   mode (AI-search visibility is a pre-submission, not a pre-draft, concern and
   autonomous silent rewrites would violate AIO's "never edit silently"
   contract) — opt-in via `--aio`, report always surfaced to user.
-- `PLAN_E2E_PIPELINE.md`: new AIO-position section justifying 7.5a placement
-  (after `check-reporting` so the Section 1.6 guideline anchor reflects real
-  compliance; after `humanize` so the human-readability pass does not erase
+- Internal pipeline planning notes record the AIO-position rationale for 7.5a
+  placement (after `check-reporting` so the Section 1.6 guideline anchor reflects
+  real compliance; after `humanize` so the human-readability pass does not erase
   AIO edits; before DOCX build so the optimizations reach the final artifact)
-  and documenting the Anti-Hallucination division of labour with
-  `search-lit` / `check-reporting` / `write-paper` / `humanize`.
+  and the Anti-Hallucination division of labour with `search-lit` /
+  `check-reporting` / `write-paper` / `humanize`.
 
 **Anti-Hallucination block added to `/academic-aio` SKILL.md**: bars fabricated
 citations / DOIs / arXiv IDs / reporting-guideline item numbers; bars invented
@@ -232,10 +232,10 @@ The validator previously checked frontmatter, size tiers, and reference integrit
 could not catch content regressions that had accumulated over prior sessions. v2 adds
 four content-integrity rules scoped to shipped skill prose (`SKILL.md` plus
 `references/**/*.md`, excluding `HANDOFF.md` and `TODO_*.md` meta-docs):
-**Rule 6** blocks project-specific precedent identifiers (`CBCT Ablation MA`,
-`Du 2023`, `FD Occlusion AI SR`, `Paper ①/②/③`) from leaking into shipped skills;
-**Rule 7** blocks absolute `/Users/eugene/` paths in shipped prose (scripts and
-exemplar `.meta.yaml` fixtures are out of scope); **Rule 8** flags dated precedent
+**Rule 6** blocks project-specific precedent identifiers (per-project IDs,
+prior-citation slugs, ordinal-numbered paper labels) from leaking into shipped
+skills; **Rule 7** blocks absolute personal home-directory paths in shipped
+prose (scripts and exemplar `.meta.yaml` fixtures are out of scope); **Rule 8** flags dated precedent
 blockquotes (`^> ... YYYY-MM-DD`) while allow-listing `Last updated:` / `Created:` /
 `Updated:` / `Date:` meta-header prefixes; **Rule 9** warns on Korean prose in
 `SKILL.md` body outside fenced code blocks, tables, blockquote examples, the

@@ -127,8 +127,12 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   fi
 
   # 6. Personal precedent leak (blocklist of project-specific identifiers)
+  # Covers: legacy project IDs (CK-N, MA-N, RFA-Adjunct, MeducAI, CBCT, etc.),
+  # institution / mentor identifiers, numbered workspace folders, and the
+  # historical prefix patterns (Paper ①②③). Keep additions in alphabetical
+  # blocks so future maintainers can spot what is being filtered.
   precedent_hits=0
-  precedent_patterns='CBCT Ablation MA|Du 2023|FD Occlusion AI SR|FD Occlusion|Paper ①|Paper ②|Paper ③'
+  precedent_patterns='\bCK-[0-9]+\b|\bMA-[0-9]+\b|\b0_MI2RL\b|\b1_Samsung_Changwon\b|\b5_Personal_Research\b|\b6_Aperivue\b|\b10_Meta_Analysis\b|\b11_CheckUP\b|\b21_Aneurysm\b|01_RFA_Adjunct|02_CBCT_Biopsy|03_CBCT_Ablation|RFA-Adjunct|RFA_Adjunct|CBCT Ablation MA|CBCT Biopsy MA|Du 2023|FD Occlusion AI SR|FD Occlusion|Paper ①|Paper ②|Paper ③|MeducAI|CXRscoliosis|SkullFx|Samsung Changwon|Asan/UoU|\bKKW\b|\bLHC\b|\bKDY\b|\bLWJ\b|김경원|이덕희|김남국|Hyunchul Rhim|Pa Hong|Taein An|Hye Ree Cho|Yoojin Nam|Dong Yeong Kim|Kyung Won Kim|Jeong Min Song|Jaeyoon Kim'
   for f in "${integrity_files[@]}"; do
     if grep -qE "$precedent_patterns" "$f"; then
       hit=$(grep -nE "$precedent_patterns" "$f" | head -1)
@@ -139,17 +143,39 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   done
   [ "$precedent_hits" -eq 0 ] && pass "Precedent blocklist (no project-specific identifiers)"
 
-  # 7. Absolute path leak (/Users/eugene/)
+  # 7. Absolute path leak (/Users/eugene/ or /home/<user>/)
   path_hits=0
   for f in "${integrity_files[@]}"; do
-    if grep -qE '/Users/eugene/' "$f"; then
-      hit=$(grep -nE '/Users/eugene/' "$f" | head -1)
+    if grep -qE '/Users/eugene/|/home/eugene/' "$f"; then
+      hit=$(grep -nE '/Users/eugene/|/home/eugene/' "$f" | head -1)
       rel="${f#$REPO_ROOT/}"
       fail "Absolute path in $rel: $hit"
       ((path_hits++))
     fi
   done
-  [ "$path_hits" -eq 0 ] && pass "Absolute paths (no /Users/eugene/ leak)"
+  [ "$path_hits" -eq 0 ] && pass "Absolute paths (no personal home-dir leak)"
+
+  # 7b. Real personal email leak. Whitelist: example.com / example.org /
+  #     known journal editorial-office domains (sciencedirect, lancet, ahajournals,
+  #     wjgnet, kams, wiley, aasld) + `your@email.com` style placeholders.
+  email_hits=0
+  email_pattern='[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+  email_whitelist='example\.com|example\.org|your@email\.com|user@host|name@|placeholder|noreply@|@lancet\.com|@strokeahajournal\.org|@aasld\.org|@wjgnet\.com|@wiley\.com|@kams\.or\.kr|@journal\.|aim-aicro\.com'
+  # Note: `aim-aicro.com` is a corporate domain that historically appeared in a
+  #   personal author roster. We allow the bare domain here only because the
+  #   precedent blocklist already catches the full `kyungwon.kim@aim-aicro.com`
+  #   string by way of the personal-name patterns above; remove from this
+  #   whitelist if the bare domain ever surfaces on its own.
+  for f in "${integrity_files[@]}"; do
+    matches=$(grep -nE "$email_pattern" "$f" | grep -vE "$email_whitelist" || true)
+    if [ -n "$matches" ]; then
+      rel="${f#$REPO_ROOT/}"
+      first=$(echo "$matches" | head -1)
+      fail "Real email leak in $rel: $first"
+      ((email_hits++))
+    fi
+  done
+  [ "$email_hits" -eq 0 ] && pass "Email whitelist (no personal addresses)"
 
   # 8. Dated precedent blockquote (lines starting with '> ' containing YYYY-MM-DD)
   # Allow-list: meta headers like "Last updated:", "Created:", "Updated:".
@@ -227,12 +253,49 @@ PY
 done
 
 echo "========================================="
+echo " Repo-root meta-doc PII scan"
+echo "========================================="
+# Apply rules 6 + 7 + 7b to tracked top-level meta-docs (CHANGELOG, README,
+# README_FIRST). These ship to the public repo and to classroom installers.
+META_FAIL=0
+META_FILES=(CHANGELOG.md README.md README_FIRST.md)
+for rel in "${META_FILES[@]}"; do
+  f="$REPO_ROOT/$rel"
+  [ -f "$f" ] || continue
+  echo "[$rel]"
+  if grep -qE "$precedent_patterns" "$f"; then
+    hit=$(grep -nE "$precedent_patterns" "$f" | head -1)
+    fail "Personal precedent in $rel: $hit"
+    ((META_FAIL++))
+  else
+    pass "Precedent blocklist clean"
+  fi
+  if grep -qE '/Users/eugene/|/home/eugene/' "$f"; then
+    hit=$(grep -nE '/Users/eugene/|/home/eugene/' "$f" | head -1)
+    fail "Absolute path in $rel: $hit"
+    ((META_FAIL++))
+  else
+    pass "Absolute paths clean"
+  fi
+  matches=$(grep -nE "$email_pattern" "$f" | grep -vE "$email_whitelist" || true)
+  if [ -n "$matches" ]; then
+    first=$(echo "$matches" | head -1)
+    fail "Real email leak in $rel: $first"
+    ((META_FAIL++))
+  else
+    pass "Email whitelist clean"
+  fi
+  echo ""
+done
+
+echo "========================================="
 echo " Summary"
 echo "========================================="
 echo -e " Skills checked: ${TOTAL}"
 echo -e " ${GREEN}PASS${NC}: ${PASS}"
 echo -e " ${YELLOW}WARN${NC}: ${WARN}"
 echo -e " ${RED}FAIL${NC}: ${FAIL}"
+echo -e " Meta-doc FAIL: ${META_FAIL}"
 echo ""
 
 python3 "$REPO_ROOT/scripts/validate_skill_contracts.py"
@@ -241,6 +304,9 @@ echo ""
 
 if [ "$FAIL" -gt 0 ]; then
   echo -e "${RED}VALIDATION FAILED${NC} — fix $FAIL issue(s) before release"
+  exit 1
+elif [ "$META_FAIL" -gt 0 ]; then
+  echo -e "${RED}VALIDATION FAILED${NC} — fix $META_FAIL meta-doc PII issue(s) before release"
   exit 1
 elif [ "$contract_status" -ne 0 ]; then
   echo -e "${RED}VALIDATION FAILED${NC} — skill contract validation failed"
