@@ -110,28 +110,37 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   fi
 
   # ---------------- Content Integrity (v2 lints) ----------------
-  # Scope: SKILL.md + references/**/*.md only (shipped prose).
-  # Excluded from style checks (rules 8, 9): TODO_*.md, HANDOFF.md.
-  # PII checks (rules 6, 7, 7b) ALSO scan top-level TODO_*.md files because
-  # those still ship publicly even though they are explicitly meta-docs.
+  # Scope: every tracked .md inside the skill directory (SKILL.md + references/
+  # + any TODO_*.md / HANDOFF*.md scratchpads that slipped past .gitignore).
+  # Rationale: meta-docs are the most common PII-leak path because authors
+  # treat them as "internal" while git still tracks and publishes them. The
+  # 2026-05-02 audit caught one such file (TODO_*.md skipped by the previous
+  # case-statement exclusion). Force scanning everything; gitignore is the
+  # mechanism for keeping a developer scratchpad out, not the linter.
+
+  # Helper: skip gitignored files. Linter should match what the public sees,
+  # not what is on local disk.
+  _add_if_tracked() {
+    local f="$1"
+    # `git check-ignore` exits 0 when the file IS ignored; skip in that case.
+    if ! git -C "$REPO_ROOT" check-ignore -q "$f" 2>/dev/null; then
+      integrity_files+=("$f")
+    fi
+  }
 
   integrity_files=()
-  pii_only_files=()  # Scanned by rules 6/7/7b only, not 8/9.
-  [ -f "$skill_file" ] && integrity_files+=("$skill_file")
+  [ -f "$skill_file" ] && _add_if_tracked "$skill_file"
   if [ -d "${skill_dir}references" ]; then
     while IFS= read -r -d '' f; do
-      # Skip meta-docs (HANDOFF, TODO_*) inside references/
-      base=$(basename "$f")
-      case "$base" in
-        HANDOFF.md|TODO_*.md) continue ;;
-      esac
-      integrity_files+=("$f")
-    done < <(find "${skill_dir}references" -type f -name "*.md" -print0 2>/dev/null)
+      _add_if_tracked "$f"
+    done < <(find "${skill_dir}references" -type f \( -name "*.md" -o -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null)
   fi
-  # Pick up TODO_*.md at the skill top level for PII-only scanning
+  # Also catch top-level skill scratchpads (skills/<name>/TODO_*.md, HANDOFF.md)
+  # and skill.yml / capabilities.yml that some skills keep alongside SKILL.md.
   while IFS= read -r -d '' f; do
-    pii_only_files+=("$f")
-  done < <(find "${skill_dir%/}" -maxdepth 1 -name "TODO_*.md" -type f -print0 2>/dev/null)
+    _add_if_tracked "$f"
+  done < <(find "${skill_dir}" -maxdepth 1 -type f \( -name "*.md" -o -name "*.yml" -o -name "*.yaml" \) \
+            ! -name "SKILL.md" -print0 2>/dev/null)
 
   # 6. Personal precedent leak (blocklist of project-specific identifiers)
   # Covers: legacy project IDs (CK-N, MA-N, RFA-Adjunct, MeducAI, CBCT, etc.),
@@ -139,8 +148,8 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   # historical prefix patterns (Paper ①②③). Keep additions in alphabetical
   # blocks so future maintainers can spot what is being filtered.
   precedent_hits=0
-  precedent_patterns='\bCK-[0-9]+\b|\bMA-[0-9]+\b|\b0_MI2RL\b|\b1_Samsung_Changwon\b|\b5_Personal_Research\b|\b6_Aperivue\b|\b10_Meta_Analysis\b|\b11_CheckUP\b|\b21_Aneurysm\b|01_RFA_Adjunct|02_CBCT_Biopsy|03_CBCT_Ablation|RFA-Adjunct|RFA_Adjunct|CBCT Ablation MA|CBCT Biopsy MA|Du 2023|FD Occlusion AI SR|FD Occlusion|Paper ①|Paper ②|Paper ③|MeducAI|CXRscoliosis|SkullFx|Samsung Changwon|삼성서울|삼성창원|서울아산|Asan/UoU|\bKKW\b|\bLHC\b|\bKDY\b|\bLWJ\b|김경원|이덕희|김남국|임현철|남유진|Hyunchul Rhim|Pa Hong|Taein An|Hye Ree Cho|Yoojin Nam|Dong Yeong Kim|Kyung Won Kim|Jeong Min Song|Jaeyoon Kim'
-  for f in "${integrity_files[@]}" ${pii_only_files[@]+"${pii_only_files[@]}"}; do
+  precedent_patterns='\bCK-[0-9]+\b|\bMA-[0-9]+\b|\b0_MI2RL\b|\b1_Samsung_Changwon\b|\b5_Personal_Research\b|\b6_Aperivue\b|\b10_Meta_Analysis\b|\b11_CheckUP\b|\b21_Aneurysm\b|01_RFA_Adjunct|02_CBCT_Biopsy|03_CBCT_Ablation|RFA-Adjunct|RFA_Adjunct|CBCT Ablation MA|CBCT Biopsy MA|Du 2023|FD Occlusion AI SR|FD Occlusion|Paper ①|Paper ②|Paper ③|MeducAI|CXRscoliosis|SkullFx|Samsung Changwon|삼성서울|삼성창원|서울아산|Asan/UoU|\bKKW\b|\bLHC\b|\bKDY\b|\bLWJ\b|\bHRP_Rhim\b|김경원|이덕희|김남국|임현철|임해진|남유진|Hyunchul Rhim|Pa Hong|Taein An|Hye Ree Cho|Yoojin Nam|Dong Yeong Kim|Kyung Won Kim|Jeong Min Song|Jaeyoon Kim|[가-힣]{2,4}[[:space:]]*(교수님|선생님)'
+  for f in "${integrity_files[@]}"; do
     if grep -qE "$precedent_patterns" "$f"; then
       hit=$(grep -nE "$precedent_patterns" "$f" | head -1)
       rel="${f#$REPO_ROOT/}"
@@ -152,7 +161,7 @@ for skill_dir in "$SKILLS_DIR"/*/; do
 
   # 7. Absolute path leak (/Users/eugene/ or /home/<user>/)
   path_hits=0
-  for f in "${integrity_files[@]}" ${pii_only_files[@]+"${pii_only_files[@]}"}; do
+  for f in "${integrity_files[@]}"; do
     if grep -qE '/Users/eugene/|/home/eugene/' "$f"; then
       hit=$(grep -nE '/Users/eugene/|/home/eugene/' "$f" | head -1)
       rel="${f#$REPO_ROOT/}"
@@ -162,22 +171,18 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   done
   [ "$path_hits" -eq 0 ] && pass "Absolute paths (no personal home-dir leak)"
 
-  # 7b. Real personal email leak. Whitelist categories:
-  #   - placeholder/example domains
-  #   - known journal editorial-office domains
-  #   - upstream open-source CSL maintainer addresses (vendored from
-  #     citationstyles.org; these are publicly registered style maintainers,
-  #     not user PII). Keep the explicit list here so a typo or rebase that
-  #     swaps in a different email does not silently pass.
+  # 7b. Real personal email leak. Whitelist: example.com / example.org /
+  #     known journal editorial-office domains (sciencedirect, lancet, ahajournals,
+  #     wjgnet, kams, wiley, aasld) + `your@email.com` style placeholders.
   email_hits=0
   email_pattern='[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
-  email_whitelist='example\.com|example\.org|your@email\.com|user@host|name@|placeholder|noreply@|@lancet\.com|@strokeahajournal\.org|@aasld\.org|@wjgnet\.com|@wiley\.com|@kams\.or\.kr|@journal\.|aim-aicro\.com|francis\.deng@gmail\.com|obrienpat86@gmail\.com|atunis@gmail\.com|charles\.parnot@gmail\.com|citationstyler@gmail\.com|mberkowi@gmu\.edu'
+  email_whitelist='example\.com|example\.org|your@email\.com|user@host|name@|placeholder|noreply@|@lancet\.com|@strokeahajournal\.org|@aasld\.org|@wjgnet\.com|@wiley\.com|@kams\.or\.kr|@journal\.|aim-aicro\.com'
   # Note: `aim-aicro.com` is a corporate domain that historically appeared in a
   #   personal author roster. We allow the bare domain here only because the
   #   precedent blocklist already catches the full `kyungwon.kim@aim-aicro.com`
   #   string by way of the personal-name patterns above; remove from this
   #   whitelist if the bare domain ever surfaces on its own.
-  for f in "${integrity_files[@]}" ${pii_only_files[@]+"${pii_only_files[@]}"}; do
+  for f in "${integrity_files[@]}"; do
     matches=$(grep -nE "$email_pattern" "$f" | grep -vE "$email_whitelist" || true)
     if [ -n "$matches" ]; then
       rel="${f#$REPO_ROOT/}"

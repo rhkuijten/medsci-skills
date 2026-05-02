@@ -44,3 +44,7 @@ skills/*/HANDOFF.md
 skills/*/HANDOFF_*.md
 skills/**/HANDOFF.md
 skills/**/HANDOFF_*.md
+
+# Note: skills/*/TODO_*.md are intentionally TRACKED (sanitized before commit)
+# so that downstream users can see what's planned. They are scanned by
+# validate_skills.sh just like SKILL.md/references.
