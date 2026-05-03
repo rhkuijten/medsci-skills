@@ -38,6 +38,27 @@ Use it when:
 
 ## Phase 0: Init & Outline
 
+### Step 0a — Load design references (read before drafting outline)
+
+Before collecting inputs, the skill loads two reference files:
+
+1. **`references/slide_design_principles.md`** — Reynolds (Presentation Zen) +
+   Duarte (Slide:ology Glance Test™) + Knaflic (Storytelling with Data preattentive
+   attributes) + Tufte (Cognitive Style of PowerPoint). Defines the 5 design
+   principles, reading-time budgets per audience, cognitive-load ceilings, and the
+   anti-patterns this skill is built to avoid. **Read this first** — it shifts the
+   outline from "what content fits" to "what should the audience remember 10 seconds
+   after each slide."
+2. **`references/medical_presentation_templates.md`** — Section structure, slide counts,
+   and design seeds for the 4 contexts: journal club, grand rounds, conference talk,
+   lecture. Pick the matching template after Phase 0 inputs are collected, then
+   customize.
+
+These two files mirror the entry-point pattern used in
+`make-figures/references/design_principles.md` (Step 1 "Specify"). Both skills share
+the same Reynolds / Knaflic / Tufte foundations — slide-level (this skill) and
+figure-level (make-figures) are companions, not duplicates.
+
 ### Required Inputs
 
 Before starting, collect these from the user:
@@ -355,6 +376,32 @@ cd /tmp/work && zip -rq ../patched.pptx . -x '*.DS_Store'
 Save to `output/presentation.pptx`. Speaker notes go into the notes pane only — never
 modify slide design when adding notes.
 
+### Step 3.5 — Slide critic (run before delivering deck)
+
+After exporting the PPTX, run the slide critic rubric at
+`references/critic_rubrics/slide.md`. Score each slide and the deck-level Mac
+compatibility checks (Section F) as PASS / PARTIAL / FAIL. Produce concrete edits for
+every FAIL or PARTIAL item before treating the deck as ready.
+
+Mandatory deck-level checks (cross-link with `~/.claude/rules/pptx-mac-compatibility.md`):
+
+```bash
+# F.22 No TIFF
+find ppt/media -iname '*.tif*' || true   # must be empty
+
+# F.23 No 3-D bevel
+grep -l '<a:sp3d>' ppt/slides/*.xml      # must be empty
+
+# F.24 app.xml count sync
+grep -c '<Slides>\|<Notes>' docProps/app.xml
+ls ppt/slides/slide*.xml | wc -l         # must match
+
+# F.25 srcRect bounds (any value > 100000 = bug)
+grep -oE '"[0-9]{6,}"' ppt/slides/*.xml | head
+```
+
+Record `critic_pass: yes | partial | no` and `refine_rounds: N` in `_quick_review.md`.
+
 **Mode B: Add notes to existing slides** (more common)
 - Read existing PPTX to understand slide structure and count
 - Map speaker script sections to corresponding slides
@@ -433,11 +480,25 @@ All outputs go in the user's presentation directory:
 ├── _references.md            # Phase 1: Verified references + key data
 ├── _script.md                # Phase 2: Speaker script
 ├── _qa_prep.md               # Phase 4: Expected Q&A
-├── _quick_review.md          # Phase 4: Pre-presentation review sheet
+├── _quick_review.md          # Phase 4: Pre-presentation review sheet + critic_pass record
+├── _slide_critic.md          # Phase 3.5: Slide rubric scores per slide
 ├── inject_notes.py           # Phase 3: Tailored note injection script
 ├── figures/                  # Extracted paper figures (if needed)
 └── reference/                # Supporting paper PDFs (if downloaded)
 ```
+
+## Cross-skill / Cross-rule integration
+
+This skill composes with adjacent skills and global rules:
+
+| When | Use | Why |
+|---|---|---|
+| Need a figure on a slide (ROC, forest, KM, flow) | `/make-figures` first, then embed | Both skills share Reynolds/Knaflic/Tufte foundations; figure-level + slide-level companions |
+| Manuscript reporting checklist parallel | `/check-reporting` for the same paper | Paper presentations often shadow manuscript revision; reporting-guideline gaps surface in Q&A |
+| Visual abstract / Central Illustration | `/make-figures` visual-abstract templates | Then verify against `~/.claude/rules/journal-ai-image-policies.md` (JACC prohibits, Radiology allows with disclosure) |
+| PPTX edits to existing institutional template | `~/.claude/rules/pptx-mac-compatibility.md` | Patch over rebuild; preserve master/layout/srcRect |
+| Manuscript companion deck | `~/.claude/rules/manuscript-style-classical.md` | Heading style, AI-Disclosure policy, em-dash discipline carry over to slides for senior MA reviewer audiences |
+| References on slides | `/verify-refs` (audit-only) before delivery | Same anti-hallucination gate as manuscript references |
 
 ---
 
